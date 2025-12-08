@@ -238,7 +238,9 @@ class MachineStatusApp2:
                 self.lift_power_indicator.itemconfig(self.lift_power_circle, fill=RED_ON , outline=RED_ON)
                 self.add_log_entry(f"[{self.dt}] : LIFTING TANK Power Status: NO POWER!")
                 #send notification to teams
-                message = f"[{self.dt}] :  LIFTING TANK Power Status: NO POWER!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] :  LIFTING TANK Power Status: NO POWER!")
                 self.send_temas_message(message)
                 self.alarm_power_lift = False
                 
@@ -248,7 +250,9 @@ class MachineStatusApp2:
                 self.lift_power_indicator.itemconfig(self.lift_power_circle, fill=GREEN_ON, outline=GREEN_ON)
                 self.add_log_entry(f"[{self.dt}] : LIFTING TANK Power Status: POWER RESTORED!")
                 #send notification to teams
-                message = f"[{self.dt}] :  LIFTING TANK Power Status: POWER RESTORED!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] :  LIFTING TANK Power Status: POWER RESTORED!")
                 self.send_temas_message(message)
                 self.alarm_power_lift = True
         # Lifting Tank Power on Status
@@ -263,7 +267,9 @@ class MachineStatusApp2:
                 self.lift_alarm_indicator.itemconfig(self.lift_alarm_circle, fill=RED_ON  ,outline=RED_ON )
                 self.add_log_entry(f"[{self.dt}] : LIFTING TANK Alarm Status: ALARM ACTIVE!")
                 #send notification to teams
-                message = f"[{self.dt}] : LIFTING TANK Alarm Status: ALARM ACTIVE!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] : LIFTING TANK Alarm Status: ALARM ACTIVE!")
                 self.send_temas_message(message)
                 self.alarm_lift = False
 
@@ -274,7 +280,9 @@ class MachineStatusApp2:
                 self.lift_alarm_indicator.itemconfig(self.lift_alarm_circle, fill=GREY_OFF,outline=GREY_OFF)
                 self.add_log_entry(f"[{self.dt}] : LIFTING TANK Alarm Status: ALARM CLEARED!")
                 #send notification to teams
-                message = f"[{self.dt}] : LIFTING TANK Alarm Status: ALARM CLEARED!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] : LIFTING TANK Alarm Status: ALARM CLEARED!")
                 self.send_temas_message(message)
                 self.alarm_lift = True
         #Lifting Tank Alarm Status
@@ -289,7 +297,9 @@ class MachineStatusApp2:
                 self.rodi_power_indicator.itemconfig(self.rodi_power_circle, fill=RED_ON , outline=RED_ON)
                 self.add_log_entry(f"[{self.dt}] : Hot RODI Power Status: NO POWER!")
                 #send notification to teams
-                message = f"[{self.dt}] : Hot RODI Power Status: NO POWER!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] : Hot RODI Power Status: NO POWER!")
                 self.send_temas_message(message)
                 self.alarm_power_rodi = False
                     
@@ -299,7 +309,9 @@ class MachineStatusApp2:
                 self.rodi_power_indicator.itemconfig(self.rodi_power_circle, fill=GREEN_ON, outline=GREEN_ON)
                 self.add_log_entry(f"[{self.dt}] : Hot RODI Power Status: POWER RESTORED!")
                 #send notification to teams
-                message = f"[{self.dt}] : Hot RODI Power Status: POWER RESTORED!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] : Hot RODI Power Status: POWER RESTORED!")
                 self.send_temas_message(message)
                 self.alarm_power_rodi = True
         #Hot RODI Power On Status
@@ -313,7 +325,9 @@ class MachineStatusApp2:
                 self.rodi_alarm_indicator.itemconfig(self.rodi_alarm_circle, fill=RED_ON  ,outline=RED_ON )
                 self.add_log_entry(f"[{self.dt}] : Hot RODI Alarm Status: ALARM ACTIVE!")
                 #send notification to teams
-                message = f"[{self.dt}] : Hot RODI Alarm Status: ALARM ACTIVE!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] : Hot RODI Alarm Status: ALARM ACTIVE!")
                 self.send_temas_message(message)
                 self.alarm_rodi = False
             
@@ -323,7 +337,9 @@ class MachineStatusApp2:
                 self.rodi_alarm_indicator.itemconfig(self.rodi_alarm_circle, fill=GREY_OFF,outline=GREY_OFF)
                 self.add_log_entry(f"[{self.dt}] : Hot RODI Alarm Status: ALARM CLEARED!")
                 #send notification to teams
-                message = f"[{self.dt}] : Hot RODI Alarm Status: ALARM CLEARED!"
+                message = (
+                    f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+                    f"[{self.dt}] : Hot RODI Alarm Status: ALARM CLEARED!")
                 self.send_temas_message(message)
                 self.alarm_rodi = True
         # Hot RODI Alarm Status
@@ -332,7 +348,9 @@ class MachineStatusApp2:
         list_time = [0,6,11,12,18] 
         current_hour = datetime.now().hour
         if current_hour in list_time and trigger:
-            message = (f"[_______Status Update_______]: {self.dt} : "
+            message = (
+            f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
+            f"{self.dt} :"
             f"[1] - Connection Status: {self.tk_Connection_status.get()} "
             f"[2] - RODI Power Status: {'POWER ON' if self.alarm_power_rodi else 'NO POWER'} "
             f"[3] - RODI Alarm Status: {'NO ALARM' if self.alarm_rodi else 'ALARM ACTIVE'} "
