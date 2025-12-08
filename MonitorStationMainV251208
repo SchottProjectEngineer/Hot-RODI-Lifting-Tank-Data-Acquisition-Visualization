@@ -344,10 +344,10 @@ class MachineStatusApp2:
                 self.alarm_rodi = True
         # Hot RODI Alarm Status
 
-    def Send_message_by_hour(self, trigger):
+    def Send_message_by_hour(self):
         list_time = [0,6,12,18] 
         current_hour = datetime.now().hour
-        if current_hour in list_time and trigger:
+        if current_hour in list_time and self.send_message_trigger:
             message = (
             f"[_______ Status Update : Hot RODI & Lifting Tank Monitoring System _______] "
             f"   \n{self.dt} :"
@@ -357,10 +357,10 @@ class MachineStatusApp2:
             f"   \n[4] - Lifting Tank Power Status: {'POWER ON' if self.alarm_power_lift else 'NO POWER'} "
             f"   \n[5] - Lifting Tank Alarm Status: {'NO ALARM' if self.alarm_lift else 'ALARM ACTIVE'}")
             self.send_temas_message(message)
-            trigger = False
+            self.send_message_trigger = False
+            
         elif current_hour not in list_time:
-            trigger = True
-        return trigger
+            self.send_message_trigger = True
 
     def RunMain(self):
         try:     
@@ -379,7 +379,7 @@ class MachineStatusApp2:
                             self.connected = False
 
                     self.update_machine_status()
-                    self.Send_message_by_hour(self.send_message_trigger)
+                    self.Send_message_by_hour()
                     
                     # Alarm Buzzer Control
                     # IF any alarm active and no power, turn on buzzer
@@ -417,3 +417,4 @@ class MachineStatusApp2:
 root = tk.Tk()
 app = MachineStatusApp2(root)
 root.mainloop()
+
