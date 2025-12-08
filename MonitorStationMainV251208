@@ -345,7 +345,7 @@ class MachineStatusApp2:
         # Hot RODI Alarm Status
 
     def Send_message_by_hour(self, trigger):
-        list_time = [0,16,6,11,12,18] 
+        list_time = [0,6,12,18] 
         current_hour = datetime.now().hour
         if current_hour in list_time and trigger:
             message = (
