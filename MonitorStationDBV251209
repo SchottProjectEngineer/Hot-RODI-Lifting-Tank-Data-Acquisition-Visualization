@@ -164,3 +164,18 @@ class DatabaseConnector:
         except pymysql.Error as e:
             print("Database Error", f"Error: {e}")
             return False
+
+    def get_machine_alarm(self, alarm_name, machine_id):
+        try:
+            if self.connection:
+                cursor = self.connection.cursor()
+                query = "SELECT id FROM machine_alarm_log WHERE alarm_name = %s AND machine_id = %s ORDER BY id DESC LIMIT 1"
+                cursor.execute(query, (alarm_name, machine_id,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+            else:
+                print("Database Error", "Failed to connect to the database.")
+                return None
+        except pymysql.Error as e:
+            print("Database Error", f"Error: {e}")
+            return False
