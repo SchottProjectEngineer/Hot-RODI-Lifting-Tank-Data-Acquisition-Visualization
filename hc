@@ -10,6 +10,8 @@ sudo apt install -y flatpak
 flatpak install -y flathub io.beekeeperstudio.BeekeeperStudio
 ##Install Nomachine##
 wget -O nomachine.deb "https://www.nomachine.com/free/arm/v8/deb" && sudo apt install -y ./nomachine.deb
+#install selenium
+sudo apt install -y python3-selenium
 
 ##alternative
 ##db manager beekeeeper studio
