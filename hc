@@ -1,3 +1,17 @@
+##Update##
+sudo apt update && sudo apt upgrade -y
+##Install The Pi App##
+git clone https://github.com/Botspot/pi-apps.git ~/pi-apps && ~/pi-apps/install
+##Install VS Code##
+wget -qO code.deb "https://update.code.visualstudio.com/latest/arm64/deb" && sudo apt install -y ./code.deb
+##Install Flatpak##
+sudo apt install -y flatpak
+##Install Beekeepeer##
+flatpak install -y flathub io.beekeeperstudio.BeekeeperStudio
+##Install Nomachine##
+wget -O nomachine.deb "https://www.nomachine.com/free/arm/v8/deb" && sudo apt install -y ./nomachine.deb
+
+##alternative
 ##db manager beekeeeper studio
 #install beekeeper studio
 # Install our GPG key
@@ -34,3 +48,8 @@ http://172.20.10.2:1880
 http://172.20.10.2:3000/login
 user : admin
 psword : Schottraspberrypi
+
+
+##github passworrd##
+username : schott.projectengineering@outlokk.com
+password: @utomation888
