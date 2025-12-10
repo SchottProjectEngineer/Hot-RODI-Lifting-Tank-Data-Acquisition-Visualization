@@ -1,0 +1,286 @@
+import logging
+import subprocess
+import time
+import traceback
+import warnings
+import socket
+import re
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from datetime import datetime
+import urllib3
+
+# Set up logging
+warnings.filterwarnings(action='ignore')
+logging.basicConfig(filename='wifi_login.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Define network name (SSID), registration/landing page URLs,
+# and login information
+
+network_name = "hotspot@wireless"
+# URL templates with placeholders for dynamic MAC and IP
+website_link_template = "https://guestaccess-sag.entiretec.com/en/?gwid=66311d085e9cc2f50665d307&vlan=813&mac={mac}&ip={ip}&ori_url=http://www.msftconnecttest.com/redirect"
+website_link = ""
+
+# Enter the fields required to login (ex: room #, last name, etc)
+accesscode = "myklm-guest-20XX-XX"  # Replace XX with the current month
+now = datetime.now()
+access_code = f"myklm-guest-{now.year}-{now.month:02d}"
+
+
+# function that disconnects from the current wifi
+def connect_to_wifi():
+    try:
+        # Use nmcli command for Raspberry Pi (NetworkManager)
+        subprocess.run(['nmcli', 'device', 'wifi', 'connect',
+                       network_name], check=True)
+        print(f"Connected to desired Wi-Fi network: '{network_name}'")
+        logging.info(f"Successfully connected to Wi-Fi network: {network_name}")
+        return True
+    except subprocess.CalledProcessError as e:
+        # log checkpoint
+        logging.error(
+            f"Failed to connect to '{network_name}' Wi-Fi network. Please check that the connection is available: %s", e)
+        print(
+            f"Failed to connect to '{network_name}' Wi-Fi network. Please check that the connection is available.")
+        return False
+    
+def disconnect_from_current_wifi():
+    try:
+        # Use nmcli command for Raspberry Pi (NetworkManager)
+        subprocess.run(['nmcli', 'device', 'disconnect', 'wlan0'], check=True)
+        print("Disconnected from the current Wi-Fi network")
+        return True
+    except subprocess.CalledProcessError as e:
+        # log checkpoint
+        logging.error("An error occurred during the disconnection process: %s", e)
+        print("Failed to disconnect from the current Wi-Fi network")
+        return False
+
+def get_mac_ip_psutil():
+    """Get MAC and IP using psutil for hotspot@wireless connection. Returns (mac, ip) or (None, None)."""
+    try:
+        import psutil
+        addrs = psutil.net_if_addrs()
+        stats = psutil.net_if_stats()
+        
+        # First, try to find the specific hotspot@wireless adapter
+        for if_name, snic_list in addrs.items():
+            # Check if this interface name matches hotspot@wireless (may have slight variations)
+            if 'wlan0' not in if_name.lower():
+                continue
+            
+            st = stats.get(if_name)
+            if not st or not st.isup:
+                print(f"⚠ Interface '{if_name}' found but is not active (down)")
+                continue
+            
+            mac = None
+            ip = None
+            for snic in snic_list:
+                if hasattr(psutil, 'AF_LINK') and snic.family == psutil.AF_LINK:
+                    mac = snic.address
+                elif str(snic.family) == 'AddressFamily.AF_LINK':
+                    mac = snic.address
+                if snic.family == socket.AF_INET:
+                    ip = snic.address
+            
+            if mac and ip:
+                print(f"✓ Found hotspot@wireless interface: {if_name} | MAC: {mac} | IP: {ip}")
+                return mac, ip
+        
+        print("ℹ hotspot@wireless not found via psutil, trying ifconfig fallback...")
+        return None, None
+    except ImportError:
+        print("ℹ psutil not installed, trying ifconfig fallback...")
+        return None, None
+    except Exception as e:
+        print(f"✗ Error in get_mac_ip_psutil: {e}")
+        return None, None
+
+def get_mac_ip_ipconfig():
+    """Get MAC and IP using ifconfig for hotspot@wireless on Raspberry Pi. Returns (mac, ip) or (None, None)."""
+    try:
+        proc = subprocess.run(['ifconfig'], capture_output=True, text=True)
+        text = proc.stdout
+        adapter_blocks = re.split(r'\n(?=[a-z])', text)
+        for block in adapter_blocks:
+            # Check if this is a wlan interface
+            if 'wlan0' not in block.lower():
+                continue
+            # Extract MAC address
+            mac_match = re.search(r'HWaddr\s+([\w:]+)|ether\s+([\w:]+)', block, re.IGNORECASE)
+            # Extract IPv4 address
+            ip_match = re.search(r'inet addr[:\s]+([\d\.]+)|inet\s+([\d\.]+)', block, re.IGNORECASE)
+            
+            mac = mac_match.group(1) or mac_match.group(2) if mac_match else None
+            ip = ip_match.group(1) or ip_match.group(2) if ip_match else None
+            
+            if mac and ip:
+                print(f"✓ Found hotspot@wireless interface | MAC: {mac} | IP: {ip}")
+                return mac, ip
+        print("⚠ hotspot@wireless interface not found in ifconfig output")
+        return None, None
+    except Exception as e:
+        print(f"✗ Error in get_mac_ip_ifconfig: {e}")
+        return None, None
+
+def detect_mac_ip():
+    """Detect current MAC and IP. Tries psutil first, falls back to ipconfig."""
+    mac, ip = get_mac_ip_psutil()
+    if not mac or not ip:
+        mac, ip = get_mac_ip_ipconfig()
+    if mac and ip:
+        return mac, ip
+    print("✗ Could not detect MAC or IP address")
+    return None, None
+
+def is_connected():
+    """Quick HTTP probe to check internet connectivity.
+
+    Uses a small lightweight URL that returns 204 (Google's generate_204).
+    Returns True if reachable, False otherwise.
+    """
+    try: 
+        http = urllib3.PoolManager(timeout=3.0)
+        response = http.request('GET', 'http://clients3.google.com/generate_204')
+        if response.status == 204:
+            return True
+        else:
+            print("✗ No internet connectivity detected (unexpected status code)")
+            return False
+    except Exception:   
+        print("✗ No internet connectivity detected")
+        return False
+
+
+    # try:
+    #     socket.create_connection(("Google.com", 80))
+    #     # test_url = https://www.google.com
+    #     # urllib.request.urlopen(https://www.google.com, timeout=timeout)
+    #     return False
+    # except Exception:
+    #     print("✗ No internet connectivity detected")
+    #     return False
+    
+def login_website():
+    try:
+        # browser = webdriver.Edge(r"C:\Users\haqim\Downloads\edgedriver_win64\msedgedriver.exe")
+        service = Service('/usr/bin/chromedriver')  
+        browser = webdriver.Chrome(service=service)
+        browser.get((website_link))
+        print("wait to website")
+        time.sleep(5)
+        ###########################################
+        # Find and press the button login access code
+        try:
+            # Try finding by Class Name first 
+            print("find element")
+            element4 = browser.find_element(By.CLASS_NAME,"form-container.code_login.py-2")
+            print("element found:", element4)
+            element4.click()
+            print("✓ Button login access code pressed successfully")
+        except Exception as e:
+            print("✗ Button login access code pressed fail:", e)
+
+        time.sleep(5)
+
+        # Find and fill the access code input
+        try:
+            # Try finding by ID first (most reliable)
+            element = browser.find_element(By.ID,"code_sms_wf")
+            print("element found:", element)
+            element.clear()
+            element.send_keys(access_code)
+            print("✓ Access code filled:", access_code)
+        except Exception as e:
+            print("✗ Access code fill failed:", e)
+
+        # Find and click the accept_terms checkbox
+        try:
+            # Try finding by Class first (most reliable)
+            element2 = browser.find_element(By.CLASS_NAME, "label-text.d-block.small")
+            print("element2 found:", element2)
+            element2.click()
+            print("✓ Checkbox clicked successfully")
+        except Exception as e:
+            print("✗ Checkbox click failed:", e)
+
+        # Find and click the login button
+        try:
+            # Try finding by Class first (most reliable)
+            element3 = browser.find_element(By.CLASS_NAME, "btn.btn-primary.btn-block")
+            print("element3 found:", element3)
+            element3.click()
+            print("✓ Button pressed successfully")
+        except Exception as e:
+            print("✗ Button press failed:", e)
+        browser.quit()
+        ##############################################
+
+        return True
+    except Exception as e:
+        # log checkpoint
+        logging.error("An error occurred during the login process...")
+        logging.error(e)
+        return False
+
+def main():
+    global website_link
+    try:
+        # Detect current MAC and IP
+        print("\n[*] Detecting current MAC and IP...")
+        mac, ip = detect_mac_ip()
+        if not mac or not ip:
+            print("✗ Failed to detect MAC/IP. Using fallback values.")
+            mac = "2C:CF:67:E4:35:1F"
+            ip = "10.154.244.254"
+        
+        # Build URLs with detected MAC and IP
+        website_link = website_link_template.format(mac=mac, ip=ip)
+        print(f"\n[*] Using URL with detected values:")
+        print(f"    MAC: {mac}")
+        print(f"    IP: {ip}")
+        print(f"    Portal URL: {website_link[:80]}...")
+        
+        # Start monitoring loop: check connectivity every 5 minutes (300s)
+        print("\n[*] Starting connectivity monitor (checks every 5 minutes). Ctrl-C to stop.")
+        try:
+            while True:
+                connected = is_connected()
+                if connected:
+                    print("[+] Internet: connected")
+                else:
+                    print("[-] Internet: disconnected — attempting to reconnect to Wi-Fi...")
+                    # Try to reconnect to the configured Wi-Fi network
+                    if connect_to_wifi():
+                        logging.info("Attempted reconnect to Wi-Fi: success")
+                        # give network time to settle
+                        time.sleep(5)
+                        # re-detect MAC/IP (DHCP may have changed IP)
+                        mac, ip = detect_mac_ip()
+                        if mac and ip:
+                            website_link = website_link_template.format(mac=mac, ip=ip)
+                            print(f"    Using MAC {mac} and IP {ip} after reconnect")
+                        if not is_connected():
+                        # Try portal login after reconnect
+                            try:
+                                login_website()
+                            except Exception as e:
+                                print(f"Error during portal login after reconnect: {e}")
+                    else:
+                        logging.warning("Reconnect attempt failed; will retry")
+                # Sleep 5 minutes before next check
+                for _ in range(300):
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n[*] Connectivity monitor stopped by user")
+            return
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+if __name__ == '__main__':
+    main()
