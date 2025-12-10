@@ -55,3 +55,12 @@ psword : Schottraspberrypi
 ##github passworrd##
 username : schott.projectengineering@outlokk.com
 password: @utomation888
+
+
+##HOTRODI and Lifting Tank Raspberry pi##
+user : schott
+pasword: schott2025
+
+##Monitor Station Raspberry pi##
+user : berrypi
+pasword: schott2025
