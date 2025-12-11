@@ -201,7 +201,8 @@ class MachineStatusApp2:
         self.log_text.see(tk.END)
     def send_temas_message(self,message:str):
         try:
-            webhook = "https://default086819dbed404544bfd2412c6f1af6.03.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c1ea559f7ce64298b5a5e6629f046fce/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=-oU0in4wgL6lD-vBCvAWY0vBGDCnefLFHkqxhsRFArY"
+            #webhook = "https://default086819dbed404544bfd2412c6f1af6.03.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c1ea559f7ce64298b5a5e6629f046fce/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=-oU0in4wgL6lD-vBCvAWY0vBGDCnefLFHkqxhsRFArY"
+            webhook = "https://default086819dbed404544bfd2412c6f1af6.03.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2b3380a5466349b4827a3902963f3821/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vcFqQIi0nNn40MMOntNCSdD2YMhPQEobF_6IR7RagwI"
             payload = {
                 "message": message
                 }
